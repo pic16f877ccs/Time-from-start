@@ -1,0 +1,8 @@
+{
+  "description": "Shows the start time and duration of the system and user operation.",
+  "name": "Time from start (Uptime)",
+  "uuid": "timeFromStart@pic16f877ccs.github.com",
+  "shell-version": [ "47" ],
+  "settings-schema": "org.gnome.shell.extensions.time-from-start",
+  "version": 1
+}

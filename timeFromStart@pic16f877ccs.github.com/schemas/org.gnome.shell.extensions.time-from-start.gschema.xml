@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.time-from-start" path="/org/gnome/shell/extensions/time-from-start/">
+    <key name="time-format" type="s">
+      <default>"default"</default>
+    </key>
+    <key name="system-user" type="s">
+      <default>"system"</default>
+    </key>
+    <key name="timer-minutes" type="u">
+      <default>0</default>
+    </key>
+    <key name="timer-hours" type="u">
+      <default>0</default>
+    </key>
+  </schema>
+</schemalist>
