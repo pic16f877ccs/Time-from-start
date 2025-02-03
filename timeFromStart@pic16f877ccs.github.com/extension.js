@@ -259,28 +259,3 @@ const TimeFromStart = GObject.registerClass(
         }
     }
 );
-                //this._displayAlarmSettings();
-                //this._changeTimeTimer = this._userUptime.uptimeMinutes();
-                //this._timeStopUptime = 0;
-                //if (this._stopMinutes() == 0) {
-                //    this._timerStartMenu.reactive = false;
-                //    this._indicatorIconChange(this._systemUser);
-                //} else if (!this._timerStartMenu.reactive) {
-                //    this._timerStartMenu.reactive = true;
-                //}
-                //this._displayAlarmSettings();
-                //this._changeTimeTimer = this._userUptime.uptimeMinutes();
-                //this._timeStopUptime = 0;
-                //if (this._stopMinutes() == 0) {
-                //    this._timerStartMenu.reactive = false;
-                //    this._indicatorIconChange(this._systemUser);
-                //} else if (!this._timerStartMenu.reactive) {
-                //    this._timerStartMenu.reactive = true;
-                //}
-                //log(this._timerStartMenu.reactive);
-                //log('Stop uptime: ' + (this._stopMinutes() + this._changeTimeTimer));
-                //log('Current user uptime: ' + currentUserUptime);
-                        //log("Set alarm");
-                //log('Stop minutes: ' + stopMinutes);
-                    //log('Time Stop uptime: ' + this._timeStopUptime);
-                    //log("Reset alarm");
