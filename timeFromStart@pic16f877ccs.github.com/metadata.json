@@ -4,5 +4,6 @@
   "uuid": "timeFromStart@pic16f877ccs.github.com",
   "shell-version": [ "47" ],
   "settings-schema": "org.gnome.shell.extensions.time-from-start",
+  "session-modes": ["user", "unlock-dialog"],
   "version": 1
 }

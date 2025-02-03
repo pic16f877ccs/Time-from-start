@@ -22,6 +22,7 @@ export default class ExamplePreferences extends ExtensionPreferences {
                 'short': 'short',
                 'long': 'long'
             }));
+
         const timeFormatComboRow = new Adw.ComboRow({
             title: 'Time duration format',
             subtitle: "Duration time format of the extension in the panel",
@@ -33,6 +34,7 @@ export default class ExamplePreferences extends ExtensionPreferences {
                     'long': 'long'
                 }).indexOf(window._settings.get_string('time-format')),
         });
+
         timeFormatComboRow.connect('notify::selected-item', () => {
 			window._settings.set_string('time-format', Object.values(
                 {
@@ -45,6 +47,7 @@ export default class ExamplePreferences extends ExtensionPreferences {
         group.add(timeFormatComboRow);
 
         const systemUserOptions = Gtk.StringList.new(Object.keys({'system': 'system', 'user': 'user'}));
+
         const systemUserComboRow = new Adw.ComboRow({
             title: 'Show system or user',
             subtitle: "Show the system or user in the panel",
@@ -52,6 +55,7 @@ export default class ExamplePreferences extends ExtensionPreferences {
             selected: Object.values({'system': 'system', 'user': 'user'})
                 .indexOf(window._settings.get_string('system-user')),
         });
+
         systemUserComboRow.connect('notify::selected-item', () => {
 			window._settings.set_string('system-user', 
                 Object.values({'system': 'system', 'user': 'user'})[systemUserComboRow.get_selected()]
@@ -64,9 +68,6 @@ export default class ExamplePreferences extends ExtensionPreferences {
         minutesSpinRow.set_wrap(true);
         minutesSpinRow.set_title('Settings of a minutes');
         minutesSpinRow.set_subtitle('Setting the reminder time in minutes');
-        minutesSpinRow.connect('notify::value', () => {
-			window._settings.set_uint('timer-minutes', minutesSpinRow.get_value());
-        });
         group.add(minutesSpinRow);
 
         let hoursSpinRow = Adw.SpinRow.new_with_range(0, 23, 1);
@@ -74,9 +75,30 @@ export default class ExamplePreferences extends ExtensionPreferences {
         hoursSpinRow.set_wrap(true);
         hoursSpinRow.set_title('Settings of a hours');
         hoursSpinRow.set_subtitle('Setting the reminder time in hours');
+        group.add(hoursSpinRow);
+
+        minutesSpinRow.connect('notify::value', () => {
+			window._settings.set_uint('timer-minutes', minutesSpinRow.get_value());
+
+            window._settings.set_uint('timer-stop-minutes', minutesSpinRow.get_value() + hoursSpinRow.get_value() * 60);
+        });
+
         hoursSpinRow.connect('notify::value', () => {
 			window._settings.set_uint('timer-hours', hoursSpinRow.get_value());
+
+            window._settings.set_uint('timer-stop-minutes', minutesSpinRow.get_value() + hoursSpinRow.get_value() * 60);
         });
-        group.add(hoursSpinRow);
+
+        window._settings.connect('changed::timer-stop-minutes', (settings, key) => {
+            settings.set_string('timer-time', `Timer: ${hoursSpinRow.get_value()}h ${minutesSpinRow.get_value()}m`); 
+
+            if (settings.get_uint(key) > 0) {
+
+                settings.set_boolean('timer-enabled', true);
+            } else {
+
+                settings.set_boolean('timer-enabled', false);
+            }
+        });
     }
 }
