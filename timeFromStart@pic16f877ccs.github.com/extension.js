@@ -265,7 +265,7 @@ const TimeFromStart = GObject.registerClass({
 
             this._indicatorIconChange('alarm');
             
-            this._buttonText.set_text(this.uptimeFormatted(this._getSystemUser['user']));
+            this._buttonText.set_text(this._timerFormatted());
 
             this._clearDelayOneMinute();
 
@@ -295,11 +295,11 @@ const TimeFromStart = GObject.registerClass({
     }
 
     _displayButtonText() {
-        this._buttonText.set_text(this.uptimeFormatted(this._getSystemUser[this._systemUser]));
+        this._buttonText.set_text(this._uptimeFormatted(this._getSystemUser[this._systemUser]));
     }
 
     _displayButtonTimerText() {
-        this._buttonText.set_text(this.uptimeFormatted(this._getSystemUser['user']));
+        this._buttonText.set_text(this._uptimeFormatted(this._getSystemUser['user']));
     }
 
     _timeStampMillisFromFile(begin, end) {
@@ -313,7 +313,7 @@ const TimeFromStart = GObject.registerClass({
         }
     }
 
-    uptimeFormatted(uptime) {
+    _uptimeFormatted(uptime) {
         const totalMinutes = uptime.uptimeMinutes();
         const totalHours = Math.floor(totalMinutes / 60);
         const days = Math.floor(totalHours / 24) + 'd';
@@ -324,6 +324,16 @@ const TimeFromStart = GObject.registerClass({
             "long": `${days} ${hours}h ${minutes}m`,
             "short": `${hours}:${minutes}`,
             "default": `${days} ${hours}:${minutes}`
+        };
+
+        return formattedDaysTime[this._timeFormat];
+    }
+
+    _timerFormatted() {
+        const formattedDaysTime = {
+            "long": "00 00h 00m",
+            "short": "00:00",
+            "default": "00 00:00"
         };
 
         return formattedDaysTime[this._timeFormat];
