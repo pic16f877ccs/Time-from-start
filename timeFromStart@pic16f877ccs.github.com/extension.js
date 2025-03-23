@@ -13,7 +13,7 @@ import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
 
 import { Uptime } from './uptime.js';
 
-export default class IndicatorExtension extends Extension {
+export default class UptimeWithTimerExtension extends Extension {
     constructor(metadata) {
         super(metadata);
 
@@ -21,20 +21,23 @@ export default class IndicatorExtension extends Extension {
     }
 
     enable() {
+        // Comments on using the "unlock-dialog" mode in the extension.
+        // The timer in the extension should continue to count the elapsed time after the screen is unlocked.
         if (this._sessionModes === null) {
-            this._sessionModes = new SessionModes(this.getSettings());
+            this._sessionModes = new SessionModes(this.getSettings(), this);
         }
     }
 
     disable() {
-        this._sessionModes?._destroy();
+        this._sessionModes?.destroy();
         this._sessionModes = null;
     }
 }
 
 class SessionModes {
-    constructor(settings) {
+    constructor(settings, extension) {
         this._settings = settings;
+        this._extension = extension;
         this._timeFromStart = null;
         this._timerIsFinished = false;
         this._timerStopMinutes = this._settings.get_uint('timer-stop-minutes');
@@ -74,7 +77,7 @@ class SessionModes {
 
     _addIndicator() {
         if (this._timeFromStart === null) {
-            this._timeFromStart = new TimeFromStart(this._settings, {
+            this._timeFromStart = new TimeFromStart(this._settings, this._extension, {
                 finished: this._timerIsFinished,
             });
 
@@ -121,8 +124,18 @@ class SessionModes {
         }
     }
 
-    _destroy() {
+    destroy() {
         this._removeReminderTimer();
+
+        if(this._timeFromStart._timeTick) {
+            GLib.Source.remove(this._timeFromStart._timeTick);
+            this._timeFromStart._timeTick = null;
+        }
+
+        if (this._timeFromStart._delayOneMinute) {
+            GLib.Source.remove(this._timeFromStart._delayOneMinute);
+            this._timeFromStart._delayOneMinute = null;
+        }
 
         if (this._sessionMode) {
             Main.sessionMode.disconnect(this._sessionMode);
@@ -148,12 +161,14 @@ const TimeFromStart = GObject.registerClass({
         ),
     },
 }, class TimeFromStart extends PanelMenu.Button {
-    constructor(settings, properties = {}) {
+    constructor(settings, extension, properties = {}) {
         super(0.0, 'Time from start');
 
         this._timerFinishId = null;
         this.finished = properties.finished;
+        this._extension = properties.extension;
 
+        this._extension = extension;
         this._settings = settings;
 
         this._timeFormat = this._settings.get_string('time-format');
@@ -231,7 +246,7 @@ const TimeFromStart = GObject.registerClass({
         let settingsMenuItem = new PopupMenu.PopupMenuItem('Settings');
         settingsMenuItem.setOrnament(PopupMenu.Ornament.NONE);
         settingsMenuItem.connect('activate', () => { 
-                Extension.lookupByUUID('timeFromStart@pic16f877ccs.github.com').openPreferences()
+            this._extension.openPreferences();
         });
         this.menu.addMenuItem(settingsMenuItem);
 
