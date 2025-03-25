@@ -23,6 +23,8 @@ export default class UptimeWithTimerExtension extends Extension {
     enable() {
         // Comments on using the "unlock-dialog" mode in the extension.
         // The timer in the extension should continue to count the elapsed time after the screen is unlocked.
+        // Using "session modes" allows you to avoid using external commands,
+        // easily handle the end of the reminder timer, and send a message to the user "when the screen is locked".
         if (this._sessionModes === null) {
             this._sessionModes = new SessionModes(this.getSettings(), this);
         }
@@ -112,7 +114,6 @@ class SessionModes {
     }
 
     _removeIndicator() {
-        this._timeFromStart?._clear();
         this._timeFromStart?.destroy();
         this._timeFromStart = null;
     }
@@ -380,7 +381,7 @@ const TimeFromStart = GObject.registerClass({
         delete this._delayOneMinute;
     }
 
-    _clear() {
+    destroy() {
         this._clearDelayOneMinute();
         this._clearTimeTicks();
 
@@ -391,5 +392,6 @@ const TimeFromStart = GObject.registerClass({
 
         this._settings.disconnectObject(this);
         delete this._settings;
+        super.destroy();
     }
 });
