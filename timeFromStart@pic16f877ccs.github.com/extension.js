@@ -83,6 +83,8 @@ class SessionModes {
                 finished: this._timerIsFinished,
             });
 
+            this._timerIsFinished = false;
+
             if(this._timeFromStart) {
                 Main.panel.addToStatusArea(this.uuid, this._timeFromStart);
             }
