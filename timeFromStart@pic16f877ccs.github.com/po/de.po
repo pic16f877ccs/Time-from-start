@@ -1,0 +1,125 @@
+# German translations of Time From Start (Uptime).
+# Deutsche Übersetzung.
+# Copyright (C) 2025 pic16f877ccs.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: timeFromStart@pic16f877ccs.github.com\n"
+"Report-Msgid-Bugs-To: https://github.com/pic16f877ccs/Time-from-start/issues\n"
+"POT-Creation-Date: 2025-06-14 22:05+0200\n"
+"PO-Revision-Date: 2025-06-15 21:33+0200\n"
+"Last-Translator: Karl Wulfert <pic16f877ccs.github.com>\n"
+"Language-Team: German <pic16f877ccs.github.com>\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: extension.js:73 extension.js:211
+msgid "Time from start"
+msgstr "Time from start"
+
+#: extension.js:150
+msgid "Reminder, the timer is finished!"
+msgstr "Erinnerung, der Timer ist abgelaufen!"
+
+#: extension.js:270
+msgid "System start time"
+msgstr "Systemstartzeit"
+
+#: extension.js:277
+msgid "User login time"
+msgstr "Benutzeranmeldezeit"
+
+#: extension.js:284
+msgid "Show Message After"
+msgstr "Nachricht anzeigen nach"
+
+#: extension.js:291
+msgid "Show user inactivity"
+msgstr "Benutzerinaktivität anzeigen"
+
+#: prefs.js:29
+msgid "Behavior"
+msgstr "Verhalten"
+
+#: prefs.js:34
+msgid "Notification Sound"
+msgstr "Benachrichtigungston"
+
+#: prefs.js:35
+msgid "Choose which sound to play"
+msgstr "Wählen Sie den abzuspielenden Ton aus"
+
+#: prefs.js:36
+msgid "Loading..."
+msgstr "Wird geladen ..."
+
+#: prefs.js:90
+msgid "Enable sound"
+msgstr "Ton aktivieren"
+
+#: prefs.js:91
+msgid "Enable or disable sound notifications"
+msgstr "Tonbenachrichtigungen aktivieren oder deaktivieren"
+
+#: prefs.js:105
+msgid "Ignore Idle Time"
+msgstr "Leerlaufzeit ignorieren"
+
+#: prefs.js:106
+msgid "Do not take into account downtime"
+msgstr "Die Ausfallzeit wird nicht berücksichtigt"
+
+#: prefs.js:111
+msgid "Format"
+msgstr "Format"
+
+#: prefs.js:123
+msgid "Time duration format"
+msgstr "Zeitdauerformat"
+
+#: prefs.js:124
+msgid "Duration time format of the extension in the panel"
+msgstr "Format der Zeitdauer für die Anzeige im Panel"
+
+#: prefs.js:136
+msgid "Mode"
+msgstr "Modus"
+
+#: prefs.js:144
+msgid "Show system or user"
+msgstr "System oder Benutzer anzeigen"
+
+#: prefs.js:145
+msgid "Show the system or user in the panel"
+msgstr "System- oder Benutzer-Laufzeit im Panel anzeigen"
+
+#: prefs.js:158
+msgid "Delay settings"
+msgstr "Verzögerungseinstellungen"
+
+#: prefs.js:165
+msgid "Settings of a minutes"
+msgstr "Einstellungen für Minuten"
+
+#: prefs.js:166
+msgid "Setting the reminder time in minutes"
+msgstr "Einstellung der Erinnerungszeit in Minuten"
+
+#: prefs.js:172
+msgid "Settings of a hours"
+msgstr "Einstellungen für Stunden"
+
+#: prefs.js:173
+msgid "Setting the reminder time in hours"
+msgstr "Einstellung der Erinnerungszeit in Stunden"
+
+#: prefs.js:242
+msgid "Failed to read directory"
+msgstr "Verzeichnis konnte nicht gelesen werden"
+
+#: prefs.js:254
+msgid "No matching sound files found"
+msgstr "Keine passenden Sounddateien gefunden"
