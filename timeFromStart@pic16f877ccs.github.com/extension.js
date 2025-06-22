@@ -5,7 +5,7 @@ import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import Meta from 'gi://Meta';
 
-import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
+import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
@@ -45,6 +45,8 @@ class SessionModes {
         this._timerStopMinutes = this._settings.get_uint('timer-stop-minutes');
         this._timerEnabled = this._timerStopMinutes > 0 ? true : false;
         this._settings.set_boolean('timer-enabled', this._timerEnabled);
+        this._unlockedDialogTimestamp = Date.now();
+        this._unlockedDialogTime = 0;
 
         this._onSessionModeChanged(Main.sessionMode);
 
@@ -60,6 +62,32 @@ class SessionModes {
         this._sessionMode = Main.sessionMode.connect('updated', this._onSessionModeChanged.bind(this));
     }
 
+    _showNotification(message) {
+        if (this._extensionNotificationSource) {
+            this._extensionNotificationSource.destroy(MessageTray.NotificationDestroyedReason.REPLACED);
+        }
+
+        if (!this._extensionNotificationSource) {
+
+            this._extensionNotificationSource = new MessageTray.Source({
+                title: _('Time from start'),
+                iconName: 'dialog-information',
+            });
+
+            this._extensionNotificationSource.connect('destroy', _source => {
+                this._extensionNotificationSource = null;
+            });
+            Main.messageTray.add(this._extensionNotificationSource);
+        }
+
+        this._extensionNotification = new MessageTray.Notification({
+            source: this._extensionNotificationSource,
+            body: message,
+        });
+
+        this._extensionNotificationSource.addNotification(this._extensionNotification);
+    }
+
     _updateTimerSettings() {
         this._timerStopMinutes = this._settings.get_uint('timer-stop-minutes');
 
@@ -69,17 +97,19 @@ class SessionModes {
 
     _onSessionModeChanged(session) {
         if (session.currentMode === 'user' || session.parentMode === 'user') {
-            log("Session mode user");
+            this._unlockedDialogTime = Date.now() - this._unlockedDialogTimestamp + this._unlockedDialogTime;
+
             this._addIndicator();
         } else if (session.currentMode === 'unlock-dialog') {
-            log("Session mode unlocked-dialog");
+            this._unlockedDialogTimestamp = Date.now();
+
             this._removeIndicator();
         }
     }
 
     _addIndicator() {
         if (this._timeFromStart === null) {
-            this._timeFromStart = new TimeFromStart(this._settings, this._extension, {
+            this._timeFromStart = new TimeFromStart(this._settings, this._extension, this._unlockedDialogTime, {
                 finished: this._timerIsFinished,
             });
 
@@ -109,7 +139,14 @@ class SessionModes {
                 this._timeFromStart.finished = this._timerIsFinished;
             }
 
-            Main.notify('Reminder', 'the timer is finished!');
+            if (this._settings.get_boolean('play-sound')) {
+                const soundFilePath = Gio.File.new_for_path(this._settings.get_value('sound-file-map').deepUnpack().soundPath);
+
+                const player = global.display.get_sound_player();
+                player.play_from_file(soundFilePath, 'Notification sound', null);
+            }
+
+            this._showNotification(_('Reminder, the timer is finished!'));
 
             return GLib.SOURCE_REMOVE;
         });
@@ -145,6 +182,11 @@ class SessionModes {
             this._sessionMode = null;
         }
 
+        if (this._extensionNotificationSource) {
+            this._extensionNotificationSource.destroy();
+            this._extensionNotificationSource = null;
+        }
+
         this._settings.disconnectObject(this);
         this._settings = null;
 
@@ -164,8 +206,8 @@ const TimeFromStart = GObject.registerClass({
         ),
     },
 }, class TimeFromStart extends PanelMenu.Button {
-    constructor(settings, extension, properties = {}) {
-        super(0.0, 'Time from start');
+    constructor(settings, extension, downtimeTimestamp, properties = {}) {
+        super(0.0, _('Time from start'));
 
         this._timerFinishId = null;
         this.finished = properties.finished;
@@ -177,7 +219,9 @@ const TimeFromStart = GObject.registerClass({
         this._timeFormat = this._settings.get_string('time-format');
         this._systemUser = this._settings.get_string('system-user');
         this._timerIsEnabled = this._settings.get_boolean('timer-enabled');
-        this._timerDelayMinutes = this._settings.get_string('timer-time');
+        this._timerStopMinutes = this._settings.get_uint('timer-stop-minutes');
+        this._downtimeMinutes = Math.floor(downtimeTimestamp / 1000 / 60);
+        this._withoutDowntime = this._settings.get_boolean('without-downtime');
 
         const startSystemTimeStampIndex = 340;
         const endSystemTimeStampIndex = 344;
@@ -221,29 +265,37 @@ const TimeFromStart = GObject.registerClass({
         });
 		this._box.insert_child_at_index(this._icon, 0);
 
-        const systemPopupMenuItem = new PopupMenu.PopupImageMenuItem(
+        const systemPopupMenuItem = new PopupImgMenuItem(
             this._systemUptime.startDatetimeString,
+            _('System start time'),
             'emblem-system-symbolic',
-            {
-                style_class: 'PopupSubMenuMenuItemStyle'
-        });
+        );
         this.menu.addMenuItem(systemPopupMenuItem);
 
-        const userPopupMenuItem = new PopupMenu.PopupImageMenuItem(
-            this._userUptime.startDatetimeString, 'avatar-default-symbolic', {
-                style_class: 'PopupSubMenuMenuItemStyle'
-        });
+        const userPopupMenuItem = new PopupImgMenuItem(
+            this._userUptime.startDatetimeString,
+            _('User login time'),
+            'avatar-default-symbolic',
+        );
         this.menu.addMenuItem(userPopupMenuItem);
 
-        this._timerPopupMenuItem = new PopupMenu.PopupImageMenuItem(
-            this._timerDelayMinutes,
+        this._timerPopupMenuItem = new PopupImgMenuItem(
+            this._popupTimeFormatted(this._timerStopMinutes),
+            _('Show Message After'),
             'alarm-symbolic',
-            {
-                style_class: 'PopupSubMenuMenuItemStyle',
-                can_focus: true,
-        });
+        );
         this.menu.addMenuItem(this._timerPopupMenuItem);
 
+        const downtimePopupMenuItem = new PopupImgMenuItem(
+            this._popupTimeFormatted(this._downtimeMinutes),
+            _('Show user inactivity'),
+            'user-info-symbolic',
+        );
+        this.menu.addMenuItem(downtimePopupMenuItem);
+
+        if(Math.floor(this._downtimeMinutes) === 0) {
+           downtimePopupMenuItem.sensitive = false;
+        }
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
         let settingsMenuItem = new PopupMenu.PopupMenuItem('Settings');
@@ -263,7 +315,16 @@ const TimeFromStart = GObject.registerClass({
                 this._indicatorIconChange(this._systemUser)
                 this._displayButtonText()
             },
-            this);
+            'changed::timer-stop-minutes', () => {
+                this._timerStopMinutes = this._settings.get_uint('timer-stop-minutes');
+                this._timerPopupMenuItem.label.text = this._popupTimeFormatted(this._timerStopMinutes);
+            },
+            'changed::without-downtime', () => {
+                this._withoutDowntime = this._settings.get_boolean('without-downtime');
+                this._displayButtonText()
+            },
+            this,
+        );
 
         this._onTimerFinishedChanged();
         if (this._timerFinishId === null) {
@@ -272,11 +333,11 @@ const TimeFromStart = GObject.registerClass({
 
         this.notify('finished');
 
-        this._settings.bind('timer-time', this._timerPopupMenuItem.label, 'text', Gio.SettingsBindFlags.DEFAULT);
         this._settings.bind('timer-enabled', this._timerPopupMenuItem, 'reactive', Gio.SettingsBindFlags.DEFAULT);
 
         this._addTimeTicks();
     } 
+
     _onTimerFinishedChanged() {
         if (this.finished) {
             this._clearTimeTicks();
@@ -293,7 +354,6 @@ const TimeFromStart = GObject.registerClass({
                 this._indicatorIconChange(this._systemUser);
                 this._addTimeTicks();
 
-                log('stop minutes: wait one minute');
                 return GLib.SOURCE_REMOVE;
             });
         }
@@ -332,19 +392,48 @@ const TimeFromStart = GObject.registerClass({
     }
 
     _uptimeFormatted(uptime) {
-        const totalMinutes = uptime.uptimeMinutes();
-        const totalHours = Math.floor(totalMinutes / 60);
-        const days = Math.floor(totalHours / 24) + 'd';
-        const hours = (totalHours % 24).toString().padStart(2, '0');
-        const minutes = (totalMinutes % 60).toString().padStart(2, '0');
+        let timeMinutes = uptime.uptimeMinutes();
+
+        if (this._systemUser === 'user') {
+            if (this._withoutDowntime) {
+                timeMinutes = Math.abs(timeMinutes - this._downtimeMinutes);
+            }
+        }
+
+        const time = this._timeFormatted(timeMinutes);
 
         const formattedDaysTime = {
-            "long": `${days} ${hours}h ${minutes}m`,
-            "short": `${hours}:${minutes}`,
-            "default": `${days} ${hours}:${minutes}`
+            "long": `${time.days} ${time.hours}h ${time.minutes}m`,
+            "short": `${time.hours}:${time.minutes}`,
+            "default": `${time.days} ${time.hours}:${time.minutes}`
         };
 
         return formattedDaysTime[this._timeFormat];
+    }
+
+    _popupTimeFormatted(timeMinutes) {
+        const time = this._timeFormatted(timeMinutes);
+
+        return `${time.days} ${time.hours}h ${time.minutes}m`;
+    }
+
+    _timerTimeFormatted() {
+        const time = this._timeFormatted(this._timerStopMinutes);
+
+        return `Timer: ${time.days} ${time.hours}h ${time.minutes}m`;
+    }
+
+    _timeFormatted(timeMinutes) {
+        const timeHours = Math.floor(timeMinutes / 60);
+        const days = Math.floor(timeHours / 24) + 'd';
+        const hours = Math.floor((timeHours % 24)).toString().padStart(2, '0');
+        const minutes = Math.floor((timeMinutes % 60)).toString().padStart(2, '0');
+
+        return {
+            minutes,
+            hours,
+            days,
+        };
     }
 
     _timerFormatted() {
@@ -395,5 +484,50 @@ const TimeFromStart = GObject.registerClass({
         this._settings.disconnectObject(this);
         delete this._settings;
         super.destroy();
+    }
+});
+
+export const PopupImgMenuItem = GObject.registerClass(
+class PopupImgMenuItem extends PopupMenu.PopupBaseMenuItem {
+    _init(text, subtext, icon, params) {
+        super._init(params);
+
+        this.set_x_expand(true);
+
+        this._icon = new St.Icon({
+            style_class: 'popup-img-icon',
+            x_align: Clutter.ActorAlign.START,
+            y_align: Clutter.ActorAlign.CENTER,
+        });
+        this.add_child(this._icon);
+
+        const boxLayout = St.BoxLayout.new();
+        boxLayout.set_vertical(true);
+
+        this.label = new St.Label({
+            text,
+            style_class: 'popup-img-label',
+            y_expand: true,
+            y_align: Clutter.ActorAlign.CENTER,
+        });
+        boxLayout.add_child(this.label);
+
+        const subLabel = new St.Label({
+            text: subtext,
+            style_class: 'popup-img-sublabel',
+            y_expand: true,
+            y_align: Clutter.ActorAlign.CENTER,
+        });
+        boxLayout.add_child(subLabel);
+
+        this.add_child(boxLayout);
+        this.setIcon(icon);
+    }
+
+    setIcon(icon) {
+        if (icon instanceof GObject.Object && GObject.type_is_a(icon, Gio.Icon))
+            this._icon.gicon = icon;
+        else
+            this._icon.icon_name = icon;
     }
 });
