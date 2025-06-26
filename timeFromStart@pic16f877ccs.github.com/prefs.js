@@ -115,7 +115,8 @@ export default class UptimeWithTimerPreferences extends ExtensionPreferences {
         const displayFormat = {
             'default': 'default',
             'short': 'short',
-            'long': 'long'
+            'long': 'long',
+            'multiline': 'multiline'
         };
         const timeFormatOptions = Gtk.StringList.new(Object.keys(displayFormat));
 

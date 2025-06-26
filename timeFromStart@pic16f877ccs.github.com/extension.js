@@ -249,6 +249,7 @@ const TimeFromStart = GObject.registerClass({
             text: "",
             y_align: Clutter.ActorAlign.CENTER
         });
+        this._buttonText.clutter_text.set_use_markup(true);
 
         this._displayButtonText()
         this._box.add_child(this._buttonText);
@@ -373,7 +374,7 @@ const TimeFromStart = GObject.registerClass({
     }
 
     _displayButtonText() {
-        this._buttonText.set_text(this._uptimeFormatted(this._getSystemUser[this._systemUser]));
+        this._buttonText.clutter_text.set_markup(this._uptimeFormatted(this._getSystemUser[this._systemUser]));
     }
 
     _displayButtonTimerText() {
@@ -405,7 +406,8 @@ const TimeFromStart = GObject.registerClass({
         const formattedDaysTime = {
             "long": `${time.days} ${time.hours}h ${time.minutes}m`,
             "short": `${time.hours}:${time.minutes}`,
-            "default": `${time.days} ${time.hours}:${time.minutes}`
+            "default": `${time.days} ${time.hours}:${time.minutes}`,
+            "multiline": `${time.hours}<tt>h</tt>\n${time.minutes}<tt>m</tt>`
         };
 
         return formattedDaysTime[this._timeFormat];
