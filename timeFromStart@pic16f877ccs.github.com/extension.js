@@ -207,7 +207,7 @@ const TimeFromStart = GObject.registerClass({
     },
 }, class TimeFromStart extends PanelMenu.Button {
     constructor(settings, extension, downtimeTimestamp, properties = {}) {
-        super(0.0, _('Time from start'));
+        super(0.5, _('Time from start'));
 
         this._timerFinishId = null;
         this.finished = properties.finished;
