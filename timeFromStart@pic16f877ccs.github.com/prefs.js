@@ -109,7 +109,7 @@ export default class UptimeWithTimerPreferences extends ExtensionPreferences {
         behaviorGroup.add(withoutDowntime);
 
         const formatGroup = new Adw.PreferencesGroup({ title: _('Format')});
-        formatGroup.set_separate_rows(true);
+        formatGroup.set_separate_rows?.(true);
         page.add(formatGroup);
 
         const displayFormat = {
@@ -135,7 +135,7 @@ export default class UptimeWithTimerPreferences extends ExtensionPreferences {
         formatGroup.add(timeFormatComboRow);
 
         const modeGroup = new Adw.PreferencesGroup({ title: _('Mode')});
-        modeGroup.set_separate_rows(true);
+        modeGroup.set_separate_rows?.(true);
         page.add(modeGroup);
 
         const systemUser = {'system': 'system', 'user': 'user'};
@@ -157,7 +157,7 @@ export default class UptimeWithTimerPreferences extends ExtensionPreferences {
         modeGroup.add(systemUserComboRow);
 
         const delayGroup = new Adw.PreferencesGroup({ title: _('Delay settings') });
-        delayGroup.set_separate_rows(true);
+        delayGroup.set_separate_rows?.(true);
         page.add(delayGroup);
 
         const minutesSpinRow = Adw.SpinRow.new_with_range(0, 59, 1);
