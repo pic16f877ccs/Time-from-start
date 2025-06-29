@@ -4,6 +4,7 @@ import GLib from 'gi://GLib';
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import Meta from 'gi://Meta';
+import Pango from 'gi://Pango';
 
 import {Extension, gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
@@ -246,10 +247,10 @@ const TimeFromStart = GObject.registerClass({
 	    this.add_child(this._box);
 
         this._buttonText = new St.Label({ 
-            text: "",
-            y_align: Clutter.ActorAlign.CENTER
+            y_align: Clutter.ActorAlign.CENTER,
         });
         this._buttonText.clutter_text.set_use_markup(true);
+        this._buttonText.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
 
         this._displayButtonText()
         this._box.add_child(this._buttonText);
