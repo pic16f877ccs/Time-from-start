@@ -11,11 +11,13 @@ export default class UptimeWithTimerPreferences extends ExtensionPreferences {
     fillPreferencesWindow(window) {
         window._settings = this.getSettings();
 
+        const extensionSoundsPath = this.metadata.path + '/sounds';
         const dirPaths = [
             '/usr/share/sounds/gnome/default/alerts',
             '/usr/share/sounds/freedesktop/stereo',
+            extensionSoundsPath,
         ];
-        const filesExt = ['.ogg', '.oga'];
+        const filesExt = ['.ogg', '.oga', '.wav'];
 
         const currentSoundName = window._settings.get_value('sound-file-map').deepUnpack().soundName;
         this._soundFileLister = new SoundFileLister(dirPaths, filesExt);
@@ -38,10 +40,7 @@ export default class UptimeWithTimerPreferences extends ExtensionPreferences {
         });
         behaviorGroup.add(soundChoiceRow);
 
-        soundChoiceRow.set_factory(Gtk.SignalListItemFactory.new(() => {
-            const label = new Gtk.Label({ xalign: 0 });
-            return label;
-        }));
+        soundChoiceRow.set_factory(Gtk.SignalListItemFactory.new());
 
         soundChoiceRow.get_factory().connect('setup', (factory, listItem) => {
             const label = new Gtk.Label({ xalign: 0 });
@@ -247,7 +246,7 @@ class SoundFileLister {
             });
         });
 
-        return Promise.all(readDirPromises)
+        return Promise.allSettled(readDirPromises)
             .then(() => {
                 if (allFiles.size > 0) {
                     return Array.from(allFiles).sort();
