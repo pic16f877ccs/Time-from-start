@@ -29,7 +29,7 @@
       <default>false</default>
     </key>
     <key name="sound-file-map" type="a{ss}">
-      <default>{"message": "/usr/share/sounds/gnome/default/alerts/hum.ogg"}</default>
+      <default>{'soundName': 'string.ogg', 'soundPath': '/usr/share/sounds/gnome/default/alerts/string.ogg'}</default>
     </key>
   </schema>
 </schemalist>

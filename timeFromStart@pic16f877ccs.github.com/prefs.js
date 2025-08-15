@@ -82,7 +82,6 @@ export default class UptimeWithTimerPreferences extends ExtensionPreferences {
             );
 
             window._settings.set_value('sound-file-map', soundFileName);
-            const name = window._settings.get_value('sound-file-map').deepUnpack();
         });
 
         const playSoundSwitchRow = new Adw.SwitchRow({
