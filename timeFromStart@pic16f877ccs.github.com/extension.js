@@ -14,6 +14,13 @@ import * as MessageTray from 'resource:///org/gnome/shell/ui/messageTray.js';
 
 import { Uptime } from './uptime.js';
 
+const RE_USER = /([-T:+]?\d{2}){9}(?=.+still logged in *$)/gm;
+const RE_SYSTEM = /([-T:+]?\d{2}){9}(?=.+still running *$)/gm;
+const START_SYSTEM_TIME_STAMP_INDEX = 340;
+const END_SYSTEM_TIME_STAMP_INDEX = 344;
+const START_USER_TIME_STAMP_INDEX = -44;
+const END_USER_TIME_STAMP_INDEX = -40;
+
 export default class UptimeWithTimerExtension extends Extension {
     constructor(metadata) {
         super(metadata);
@@ -224,16 +231,11 @@ const TimeFromStart = GObject.registerClass({
         this._downtimeMinutes = Math.floor(downtimeTimestamp / 1000 / 60);
         this._withoutDowntime = this._settings.get_boolean('without-downtime');
 
-        const startSystemTimeStampIndex = 340;
-        const endSystemTimeStampIndex = 344;
-        const startUserTimeStampIndex = -44;
-        const endUserTimeStampIndex = -40;
-
         this._systemUptime = new Uptime(
-            this._timeStampMillisFromFile(startSystemTimeStampIndex, endSystemTimeStampIndex)
+            this._timeStampMillisFromFile(START_SYSTEM_TIME_STAMP_INDEX, END_SYSTEM_TIME_STAMP_INDEX)
         );
         this._userUptime = new Uptime(
-            this._timeStampMillisFromFile(startUserTimeStampIndex, endUserTimeStampIndex)
+            this._timeStampMillisFromFile(START_USER_TIME_STAMP_INDEX, END_USER_TIME_STAMP_INDEX)
         );
 
         this._getSystemUser = {
@@ -389,8 +391,26 @@ const TimeFromStart = GObject.registerClass({
             return new DataView(Uint8Array.from(byteArray).buffer).getUint32(0, true) * 1000.0;
         }
         catch {
-            return new Date().getTime();
+            if((START_SYSTEM_TIME_STAMP_INDEX == begin) && (END_SYSTEM_TIME_STAMP_INDEX == end)) {
+                return this._timeStampMillisFromLast(RE_SYSTEM);
+            } else if ((START_USER_TIME_STAMP_INDEX == begin) && (END_USER_TIME_STAMP_INDEX == end)) {
+                return this._timeStampMillisFromLast(RE_USER)
+            } else {
+                return new Date().getTime();
+            }
         }
+    }
+
+    _timeStampMillisFromLast(re) {
+        let proc = Gio.Subprocess.new(
+            ["last", "-p", "now", "--time-format", "iso"],
+            Gio.SubprocessFlags.STDOUT_PIPE
+        );
+
+        let [, stdout, ] = proc.communicate_utf8(null, null);
+
+        return GLib.DateTime.new_from_iso8601(stdout.match(re)[0],
+            GLib.TimeZone.new_utc()).to_unix() * 1000;
     }
 
     _uptimeFormatted(uptime) {
