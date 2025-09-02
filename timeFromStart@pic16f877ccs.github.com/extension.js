@@ -302,7 +302,7 @@ const TimeFromStart = GObject.registerClass({
         }
         this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
 
-        let settingsMenuItem = new PopupMenu.PopupMenuItem('Settings');
+        let settingsMenuItem = new PopupMenu.PopupMenuItem(_('Settings'));
         settingsMenuItem.setOrnament(PopupMenu.Ornament.NONE);
         settingsMenuItem.connect('activate', () => { 
             this._extension.openPreferences();
