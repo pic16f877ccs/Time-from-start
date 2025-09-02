@@ -258,7 +258,7 @@ const TimeFromStart = GObject.registerClass({
         this._box.add_child(this._buttonText);
 
         this._systemUserIcon = {
-            "system": 'emblem-system-symbolic',
+            "system": 'applications-system-symbolic',
             "user": 'avatar-default-symbolic',
             "alarm": 'alarm-symbolic'
         };
@@ -272,7 +272,7 @@ const TimeFromStart = GObject.registerClass({
         const systemPopupMenuItem = new PopupImgMenuItem(
             this._systemUptime.startDatetimeString,
             _('System start time'),
-            'emblem-system-symbolic',
+            'applications-system-symbolic',
         );
         this.menu.addMenuItem(systemPopupMenuItem);
 
