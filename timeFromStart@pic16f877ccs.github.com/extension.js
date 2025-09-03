@@ -244,17 +244,18 @@ const TimeFromStart = GObject.registerClass({
         };
 
        	this._box = new St.BoxLayout({
-            x_align: Clutter.ActorAlign.FILL 
+            x_align: Clutter.ActorAlign.FILL,
         });
 	    this.add_child(this._box);
 
         this._buttonText = new St.Label({ 
+            style_class: 'time-text-label',
             y_align: Clutter.ActorAlign.CENTER,
         });
         this._buttonText.clutter_text.set_use_markup(true);
         this._buttonText.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
 
-        this._displayButtonText()
+        this._displayButtonText();
         this._box.add_child(this._buttonText);
 
         this._systemUserIcon = {
