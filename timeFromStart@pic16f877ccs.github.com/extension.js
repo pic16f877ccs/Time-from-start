@@ -16,10 +16,6 @@ import { Uptime } from './uptime.js';
 
 const RE_USER = /([-T:+]?\d{2}){9}(?=.+still logged in *$)/gm;
 const RE_SYSTEM = /([-T:+]?\d{2}){9}(?=.+still running *$)/gm;
-const START_SYSTEM_TIME_STAMP_INDEX = 340;
-const END_SYSTEM_TIME_STAMP_INDEX = 344;
-const START_USER_TIME_STAMP_INDEX = -44;
-const END_USER_TIME_STAMP_INDEX = -40;
 
 export default class UptimeWithTimerExtension extends Extension {
     constructor(metadata) {
@@ -232,10 +228,10 @@ const TimeFromStart = GObject.registerClass({
         this._withoutDowntime = this._settings.get_boolean('without-downtime');
 
         this._systemUptime = new Uptime(
-            this._timeStampMillisFromFile(START_SYSTEM_TIME_STAMP_INDEX, END_SYSTEM_TIME_STAMP_INDEX)
+            this._timeStampMillisFromFile(RE_SYSTEM)
         );
         this._userUptime = new Uptime(
-            this._timeStampMillisFromFile(START_USER_TIME_STAMP_INDEX, END_USER_TIME_STAMP_INDEX)
+            this._timeStampMillisFromFile(RE_USER)
         );
 
         this._getSystemUser = {
@@ -385,20 +381,12 @@ const TimeFromStart = GObject.registerClass({
         this._buttonText.set_text(this._uptimeFormatted(this._getSystemUser['user']));
     }
 
-    _timeStampMillisFromFile(begin, end) {
+    _timeStampMillisFromFile(regex) {
         try {
-            const byteArray = GLib.file_get_contents('/var/run/utmp')[1].slice(begin, end);
-
-            return new DataView(Uint8Array.from(byteArray).buffer).getUint32(0, true) * 1000.0;
+            return this._timeStampMillisFromLast(regex)
         }
         catch {
-            if((START_SYSTEM_TIME_STAMP_INDEX == begin) && (END_SYSTEM_TIME_STAMP_INDEX == end)) {
-                return this._timeStampMillisFromLast(RE_SYSTEM);
-            } else if ((START_USER_TIME_STAMP_INDEX == begin) && (END_USER_TIME_STAMP_INDEX == end)) {
-                return this._timeStampMillisFromLast(RE_USER)
-            } else {
-                return new Date().getTime();
-            }
+            return new Date().getTime();
         }
     }
 
