@@ -438,8 +438,8 @@ const TimeFromStart = GObject.registerClass({
     _timeFormatted(timeMinutes) {
         let minutes = "M";
         let hours = "H";
-
         let days = "D";
+
          if (timeMinutes < 0) {
              return {
                  minutes,
