@@ -436,10 +436,22 @@ const TimeFromStart = GObject.registerClass({
     }
 
     _timeFormatted(timeMinutes) {
+        let minutes = "M";
+        let hours = "H";
+
+        let days = "D";
+         if (timeMinutes < 0) {
+             return {
+                 minutes,
+                 hours,
+                 days,
+             };
+         }
+
         const timeHours = Math.floor(timeMinutes / 60);
-        const days = Math.floor(timeHours / 24) + 'd';
-        const hours = Math.floor((timeHours % 24)).toString().padStart(2, '0');
-        const minutes = Math.floor((timeMinutes % 60)).toString().padStart(2, '0');
+        days = Math.floor(timeHours / 24) + 'd';
+        hours = Math.floor((timeHours % 24)).toString().padStart(2, '0');
+        minutes = Math.floor((timeMinutes % 60)).toString().padStart(2, '0');
 
         return {
             minutes,
