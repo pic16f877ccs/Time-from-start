@@ -1,9 +1,7 @@
-export class Uptime extends Date {
+export class Uptime {
     constructor(uptimeMilliseconds) {
-        super();
-
         this.timeStampMilliseconds = uptimeMilliseconds;
-        this.startDatetimeString = new Date(this.timeStampMilliseconds).toLocaleString();
+        this.startDatetimeString = new Date(uptimeMilliseconds).toLocaleString();
     }
 
     uptimeMilliseconds() {
