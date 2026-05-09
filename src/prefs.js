@@ -127,7 +127,7 @@ export default class UptimeWithTimerPreferences extends ExtensionPreferences {
         });
 
         timeFormatComboRow.connect('notify::selected-item', () => {
-			window._settings.set_string('time-format',
+            window._settings.set_string('time-format',
                 Object.values(displayFormat)[timeFormatComboRow.get_selected()]);
         });
         formatGroup.add(timeFormatComboRow);
@@ -148,7 +148,7 @@ export default class UptimeWithTimerPreferences extends ExtensionPreferences {
         });
 
         systemUserComboRow.connect('notify::selected-item', () => {
-			window._settings.set_string('system-user', 
+            window._settings.set_string('system-user', 
                 Object.values(systemUser)[systemUserComboRow.get_selected()]
             );
         });
@@ -173,13 +173,13 @@ export default class UptimeWithTimerPreferences extends ExtensionPreferences {
         delayGroup.add(hoursSpinRow);
 
         minutesSpinRow.connect('notify::value', () => {
-			window._settings.set_uint('timer-minutes', minutesSpinRow.get_value());
+            window._settings.set_uint('timer-minutes', minutesSpinRow.get_value());
 
             window._settings.set_uint('timer-stop-minutes', minutesSpinRow.get_value() + hoursSpinRow.get_value() * 60);
         });
 
         hoursSpinRow.connect('notify::value', () => {
-			window._settings.set_uint('timer-hours', hoursSpinRow.get_value());
+            window._settings.set_uint('timer-hours', hoursSpinRow.get_value());
 
             window._settings.set_uint('timer-stop-minutes', minutesSpinRow.get_value() + hoursSpinRow.get_value() * 60);
         });
@@ -237,7 +237,7 @@ class SoundFileLister {
 
                             resolve();
                         } catch (e) {
-                            logError(e, `Failed to read directory: ${path}`);
+                            console.error(`Failed to read directory: ${path}`, e);
                             reject([_('Failed to read directory')]);
                         }
                     }
