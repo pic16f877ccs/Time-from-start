@@ -47,10 +47,11 @@ class SessionModes {
         this._timeFromStart = null;
         this._timerIsFinished = false;
         this._timerStopMinutes = this._settings.get_uint('timer-stop-minutes');
-        this._timerEnabled = this._timerStopMinutes > 0 ? true : false;
+        this._timerEnabled = this._timerStopMinutes > 0;
         this._settings.set_boolean('timer-enabled', this._timerEnabled);
         this._unlockedDialogTimestamp = Date.now();
         this._unlockedDialogTime = 0;
+        this._extensionNotificationSource = null;
 
         this._onSessionModeChanged(Main.sessionMode);
 
@@ -68,7 +69,8 @@ class SessionModes {
 
     _showNotification(message) {
         if (this._extensionNotificationSource) {
-            this._extensionNotificationSource.destroy(MessageTray.NotificationDestroyedReason.REPLACED);
+            this._extensionNotificationSource.destroy();
+            this._extensionNotificationSource = null;
         }
 
         if (!this._extensionNotificationSource) {
@@ -120,7 +122,7 @@ class SessionModes {
             this._timerIsFinished = false;
 
             if(this._timeFromStart) {
-                Main.panel.addToStatusArea(this.uuid, this._timeFromStart);
+                Main.panel.addToStatusArea(this._extension.uuid, this._timeFromStart);
             }
         }
     }
@@ -135,7 +137,7 @@ class SessionModes {
             this._reminderTimer = null;
         }
 
-        this._reminderTimer = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT,  this._timerStopMinutes * 60, () => {
+        this._reminderTimer = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, this._timerStopMinutes * 60, () => {
             this._timerIsFinished = true;
             this._settings.set_boolean('timer-enabled', false);
 
@@ -171,16 +173,6 @@ class SessionModes {
     destroy() {
         this._removeReminderTimer();
 
-        if(this._timeFromStart._timeTick) {
-            GLib.Source.remove(this._timeFromStart._timeTick);
-            this._timeFromStart._timeTick = null;
-        }
-
-        if (this._timeFromStart._delayOneMinute) {
-            GLib.Source.remove(this._timeFromStart._delayOneMinute);
-            this._timeFromStart._delayOneMinute = null;
-        }
-
         if (this._sessionMode) {
             Main.sessionMode.disconnect(this._sessionMode);
             this._sessionMode = null;
@@ -215,14 +207,11 @@ const TimeFromStart = GObject.registerClass({
 
         this._timerFinishId = null;
         this.finished = properties.finished;
-        this._extension = properties.extension;
-
         this._extension = extension;
         this._settings = settings;
 
         this._timeFormat = this._settings.get_string('time-format');
         this._systemUser = this._settings.get_string('system-user');
-        this._timerIsEnabled = this._settings.get_boolean('timer-enabled');
         this._timerStopMinutes = this._settings.get_uint('timer-stop-minutes');
         this._downtimeMinutes = Math.floor(downtimeTimestamp / 1000 / 60);
         this._withoutDowntime = this._settings.get_boolean('without-downtime');
@@ -239,10 +228,10 @@ const TimeFromStart = GObject.registerClass({
             "user": this._userUptime
         };
 
-       	this._box = new St.BoxLayout({
+        this._box = new St.BoxLayout({
             x_align: Clutter.ActorAlign.FILL,
         });
-	    this.add_child(this._box);
+        this.add_child(this._box);
 
         this._buttonText = new St.Label({ 
             style_class: 'time-text-label',
@@ -261,10 +250,10 @@ const TimeFromStart = GObject.registerClass({
         };
 
         this._icon = new St.Icon({
-                icon_name: this._systemUserIcon[this._systemUser],
-                style_class: 'system-status-icon',
+            icon_name: this._systemUserIcon[this._systemUser],
+            style_class: 'system-status-icon',
         });
-		this._box.insert_child_at_index(this._icon, 0);
+        this._box.insert_child_at_index(this._icon, 0);
 
         const systemPopupMenuItem = new PopupImgMenuItem(
             this._systemUptime.startDatetimeString,
@@ -366,8 +355,8 @@ const TimeFromStart = GObject.registerClass({
         }
 
         this._icon = new St.Icon({
-                icon_name: this._systemUserIcon[systemUser],
-                style_class: 'system-status-icon',
+            icon_name: this._systemUserIcon[systemUser],
+            style_class: 'system-status-icon',
         });
 
         this._box.insert_child_at_index(this._icon, 0);
@@ -375,10 +364,6 @@ const TimeFromStart = GObject.registerClass({
 
     _displayButtonText() {
         this._buttonText.clutter_text.set_markup(this._uptimeFormatted(this._getSystemUser[this._systemUser]));
-    }
-
-    _displayButtonTimerText() {
-        this._buttonText.set_text(this._uptimeFormatted(this._getSystemUser['user']));
     }
 
     _timeStampMillisFromFile(regex) {
@@ -407,7 +392,7 @@ const TimeFromStart = GObject.registerClass({
 
         if (this._systemUser === 'user') {
             if (this._withoutDowntime) {
-                timeMinutes = Math.abs(timeMinutes - this._downtimeMinutes);
+                timeMinutes = Math.max(0, timeMinutes - this._downtimeMinutes);
             }
         }
 
@@ -427,12 +412,6 @@ const TimeFromStart = GObject.registerClass({
         const time = this._timeFormatted(timeMinutes);
 
         return `${time.days} ${time.hours}h ${time.minutes}m`;
-    }
-
-    _timerTimeFormatted() {
-        const time = this._timeFormatted(this._timerStopMinutes);
-
-        return `Timer: ${time.days} ${time.hours}h ${time.minutes}m`;
     }
 
     _timeFormatted(timeMinutes) {
@@ -462,9 +441,10 @@ const TimeFromStart = GObject.registerClass({
 
     _timerFormatted() {
         const formattedDaysTime = {
-            "long": "00 00h 00m",
-            "short": "00:00",
-            "default": "00 00:00"
+            'long': '00 00h 00m',
+            'short': '00:00',
+            'default': '00 00:00',
+            'multiline': '00<tt>h</tt>\n00<tt>m</tt>',
         };
 
         return formattedDaysTime[this._timeFormat];
@@ -475,7 +455,7 @@ const TimeFromStart = GObject.registerClass({
             return;
         }
 
-        this._timeTick = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT,  60, () => {
+        this._timeTick = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 60, () => {
             this._displayButtonText();
 
             return GLib.SOURCE_CONTINUE;
