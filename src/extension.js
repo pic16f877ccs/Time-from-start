@@ -52,6 +52,7 @@ class SessionModes {
         this._unlockedDialogTimestamp = Date.now();
         this._unlockedDialogTime = 0;
         this._extensionNotificationSource = null;
+        this._reminderTimer = null;
 
         this._onSessionModeChanged(Main.sessionMode);
 
@@ -73,18 +74,15 @@ class SessionModes {
             this._extensionNotificationSource = null;
         }
 
-        if (!this._extensionNotificationSource) {
+        this._extensionNotificationSource = new MessageTray.Source({
+            title: _('Time from start'),
+            iconName: 'dialog-information',
+        });
 
-            this._extensionNotificationSource = new MessageTray.Source({
-                title: _('Time from start'),
-                iconName: 'dialog-information',
-            });
-
-            this._extensionNotificationSource.connect('destroy', _source => {
-                this._extensionNotificationSource = null;
-            });
-            Main.messageTray.add(this._extensionNotificationSource);
-        }
+        this._extensionNotificationSource.connect('destroy', _source => {
+            this._extensionNotificationSource = null;
+        });
+        Main.messageTray.add(this._extensionNotificationSource);
 
         this._extensionNotification = new MessageTray.Notification({
             source: this._extensionNotificationSource,
@@ -181,6 +179,7 @@ class SessionModes {
         if (this._extensionNotificationSource) {
             this._extensionNotificationSource.destroy();
             this._extensionNotificationSource = null;
+            this._extensionNotification = null;
         }
 
         this._settings.disconnectObject(this);
@@ -365,13 +364,13 @@ const TimeFromStart = GObject.registerClass({
     _displayButtonText() {
         this._buttonText.clutter_text.set_markup(this._uptimeFormatted(this._getSystemUser[this._systemUser]));
     }
-
+    
     _timeStampMillisFromFile(regex) {
         try {
-            return this._timeStampMillisFromLast(regex)
+            return this._timeStampMillisFromLast(regex);
         }
         catch {
-            return new Date().getTime();
+            return Date.now();
         }
     }
 
