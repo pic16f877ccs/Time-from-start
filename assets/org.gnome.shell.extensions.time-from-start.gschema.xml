@@ -7,9 +7,6 @@
     <key name="system-user" type="s">
       <default>"system"</default>
     </key>
-    <key name="timer-time" type="s">
-      <default>"Timer: 0h 0m"</default>
-    </key>
     <key name="timer-minutes" type="u">
       <default>0</default>
     </key>
