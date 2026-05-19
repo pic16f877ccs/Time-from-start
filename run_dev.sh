@@ -12,7 +12,10 @@ second_arg="$2"
 build() {
     local build_temp="${PROJECT_ROOT}/build/temp/"
     local path_to_schema="${PROJECT_ROOT}/assets/org.gnome.shell.extensions.time-from-start.gschema.xml"
+    local path_to_podir="${PROJECT_ROOT}/assets/locale/"
     local path_to_src="${PROJECT_ROOT}/src/"
+    local extra_sources_list=()
+    local extra_sources=()
 
     mkdir -p "$build_temp"
     mkdir -p "$BUILD_DIST"
